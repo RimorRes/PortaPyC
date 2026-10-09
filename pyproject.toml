@@ -1,0 +1,63 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "portapyc"
+dynamic = ["version"]
+description = "PortaPyC, a python 3 port of RPyC version 3.3.0, allows communicating with python 2 clients and servers."
+readme = "README.rst"
+license = "MIT"
+license-files = ["LICENSE"]
+authors = [
+    {name = "Tomer Filiba", email = "tomerfiliba@gmail.com"},
+]
+maintainers = [
+    {name = "Maxime Djomby", email = "maxime.djomby@thalesgroup.com"},
+]
+requires-python = ">=3.7"
+dependencies = [
+    "plumbum",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "Intended Audience :: System Administrators",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Topic :: Software Development :: Object Brokering",
+    "Topic :: Software Development :: Testing",
+    "Topic :: System :: Clustering",
+    "Topic :: System :: Distributed Computing",
+    "Topic :: System :: Monitoring",
+    "Topic :: System :: Networking",
+    "Topic :: System :: Systems Administration",
+]
+
+[project.urls]
+Homepage = "http://rpyc.readthedocs.org"
+
+[project.optional-dependencies]
+test = ["nose"]
+
+[tool.setuptools.dynamic]
+version = {attr = "portapyc.version.version_string"}
+
+[tool.setuptools.packages.find]
+include = ["portapyc*"]
+
+[tool.setuptools]
+script-files = [
+    "bin/rpyc_classic.py",
+    "bin/rpyc_registry.py",
+]
+zip-safe = false
