@@ -10,15 +10,15 @@ usage:
 """
 import sys
 import os
-import portapyc
+import rpyc
 from plumbum import cli
-from portapyc.utils.server import ThreadedServer, ForkingServer, OneShotServer
-from portapyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
-from portapyc.utils.registry import REGISTRY_PORT
-from portapyc.utils.registry import UDPRegistryClient, TCPRegistryClient
-from portapyc.utils.authenticators import SSLAuthenticator
-from portapyc.lib import setup_logger
-from portapyc.core import SlaveService
+from rpyc.utils.server import ThreadedServer, ForkingServer, OneShotServer
+from rpyc.utils.classic import DEFAULT_SERVER_PORT, DEFAULT_SERVER_SSL_PORT
+from rpyc.utils.registry import REGISTRY_PORT
+from rpyc.utils.registry import UDPRegistryClient, TCPRegistryClient
+from rpyc.utils.authenticators import SSLAuthenticator
+from rpyc.lib import setup_logger
+from rpyc.core import SlaveService
 
 
 class ClassicServer(cli.Application):
@@ -111,7 +111,7 @@ class ClassicServer(cli.Application):
         sys.stdin = open(os.devnull, "r")
         sys.stdout = open(os.devnull, "w")
         sys.stderr = open(os.devnull, "w")
-        conn = portapyc.utils.classic.connect_pipes(origstdin, origstdout)
+        conn = rpyc.utils.classic.connect_pipes(origstdin, origstdout)
         try:
             try:
                 conn.serve_all()
