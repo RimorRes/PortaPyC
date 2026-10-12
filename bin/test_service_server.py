@@ -22,6 +22,11 @@ class MyService(rpyc.Service):
 
 
 if __name__ == "__main__":
+    import argparse
     from rpyc.utils.server import ThreadedServer
-    t = ThreadedServer(MyService, port=18861)
+    parser = argparse.ArgumentParser()
+    parser.add_argument("--host", default="127.0.0.1")
+    parser.add_argument("--port", type=int, default=18861)
+    args = parser.parse_args()
+    t = ThreadedServer(MyService, hostname=args.host, port=args.port, reuse_addr=True)
     t.start()
