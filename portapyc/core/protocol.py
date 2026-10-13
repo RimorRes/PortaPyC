@@ -56,6 +56,7 @@ DEFAULT_CONFIG = dict(
     credentials = None,
     endpoints = None,
     logger = None,
+    convert_str = False,  # convert received python2 str objects to python3 str objects and vice versa.
 )
 """
 The default configuration dictionary of the protocol. You can override these parameters
@@ -111,6 +112,9 @@ Parameter                                Default value     Description
                                                            remote one (``getpeername``). This is set by the server
                                                            upon accepting a connection; client side connections
                                                            do no have this configuration option set.
+                                                           
+``str_convert``                          ``False``         **Runtime**: whether to convert received python2 str 
+                                                           objects to python3 str objects and vice versa.
 =======================================  ================  =====================================================
 """
 
@@ -223,7 +227,7 @@ class Connection(object):
             raise PingError("echo mismatches sent data")
 
     def _send(self, msg, seq, args):
-        data = brine.dump((msg, seq, args))
+        data = brine.dump((msg, seq, args), convert_str=self._config["convert_str"])
         self._sendlock.acquire()
         try:
             self._channel.send(data)
@@ -358,7 +362,7 @@ class Connection(object):
         return data
 
     def _dispatch(self, data):
-        msg, seq, args = brine.load(data)
+        msg, seq, args = brine.load(data, convert_str=self._config["convert_str"])
         if msg == consts.MSG_REQUEST:
             self._dispatch_request(seq, args)
         elif msg == consts.MSG_REPLY:

@@ -59,14 +59,64 @@ def test_classic_connection_supports_iterators(classic_server):
         conn.close()
 
 
+def test_classic_connection_default_conversion(classic_server):
+    host, port = classic_server
+    config = {"convert_str": False}
+    conn = portapyc.classic.connect(host, port, config=config)
+    try:
+        value = "Hello world"
+        # Check (py3) str -> Unicode (py2) conversion
+        assert conn.builtin.isinstance(value, conn.builtin.unicode)
+
+        remote_value = conn.eval("u'Hello world'")
+        # Check (py2) Unicode -> str (py3) conversion
+        assert isinstance(remote_value, str)
+
+        value = b"Hello world"
+        # Check (py3) bytes -> str (py2) conversion
+        assert conn.builtin.isinstance(value, conn.builtin.str)
+
+        remote_value = conn.eval("'Hello world'")
+        # Check (py2) str -> bytes (py3) conversion
+        assert isinstance(remote_value, bytes)
+
+    finally:
+        conn.close()
+
+
+def test_classic_connection_str_conversion(classic_server):
+    host, port = classic_server
+    config = {"convert_str": True}
+    conn = portapyc.classic.connect(host, port, config=config)
+    try:
+        value = "Hello world"
+        # Check (py3) str -> str (py2) conversion
+        assert conn.builtin.isinstance(value, conn.builtin.str)
+
+        remote_value = conn.eval("u'Hello world'")
+        # Check (py2) Unicode -> str (py3) conversion
+        assert isinstance(remote_value, str)
+
+        value = b"Hello world"
+        # Check (py3) bytes -> str (py2) conversion
+        assert conn.builtin.isinstance(value, conn.builtin.str)
+
+        remote_value = conn.eval("'Hello world'")
+        # Check (py2) str -> str (py3) conversion
+        assert isinstance(remote_value, str)
+
+    finally:
+        conn.close()
+
+
 def test_service_exposes_methods_attributes_and_service_metadata(service_server):
     host, port = service_server
     conn = portapyc.connect(host, port)
     try:
         assert conn.root.get_answer() == 42
         assert conn.root.the_real_answer_though == 43
-        assert conn.root.get_service_name().decode("ascii") == "MY"
-        assert tuple(alias.decode("ascii") for alias in conn.root.get_service_aliases()) == ("MY",)
+        assert conn.root.get_service_name().decode("utf-8") == "MY"
+        assert tuple(alias.decode("utf-8") for alias in conn.root.get_service_aliases()) == ("MY",)
     finally:
         conn.close()
 
