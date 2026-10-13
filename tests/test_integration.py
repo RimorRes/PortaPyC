@@ -26,6 +26,38 @@ def test_classic_connection_supports_remote_objects(classic_server):
     finally:
         conn.close()
 
+def test_classic_connection_supports_remote_exceptions(classic_server):
+    host, port = classic_server
+    conn = portapyc.classic.connect(host, port)
+    try:
+        try:
+            conn.execute("raise ValueError('test error')")
+        except ValueError as e:
+            arg = e.args[0].decode("utf-8")
+            assert arg == "test error"
+        else:
+            raise AssertionError("expected ValueError was not raised")
+    finally:
+        conn.close()
+
+
+def test_classic_connection_supports_iterators(classic_server):
+    host, port = classic_server
+    conn = portapyc.classic.connect(host, port)
+    try:
+        remote_iter = conn.eval("iter([1, 2, 3])")
+        assert next(remote_iter) == 1
+        assert next(remote_iter) == 2
+        assert next(remote_iter) == 3
+        try:
+            next(remote_iter)
+        except StopIteration:
+            pass
+        else:
+            raise AssertionError("expected StopIteration was not raised")
+    finally:
+        conn.close()
+
 
 def test_service_exposes_methods_attributes_and_service_metadata(service_server):
     host, port = service_server

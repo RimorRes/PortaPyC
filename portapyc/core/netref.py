@@ -250,6 +250,10 @@ def class_factory(clsname, modname, methods):
         name = to_str(name)                                  # IronPython issue #10
         if name not in _local_netref_attrs:
             ns[name] = _make_method(name, doc)
+        if is_py3k and name == "next":
+            # Python 3 looks up __next__ for the iterator protocol, while
+            # Python 2 iterators expose the method as next.
+            ns["__next__"] = _make_method(name, doc)
     ns["__module__"] = modname
     if modname in sys.modules and hasattr(sys.modules[modname], clsname):
         ns["__class__"] = getattr(sys.modules[modname], clsname)
@@ -268,4 +272,3 @@ builtin_classes_cache = {}
 for cls in _builtin_types:
     builtin_classes_cache[cls.__name__, cls.__module__] = class_factory(
         cls.__name__, cls.__module__, inspect_methods(cls))
-
