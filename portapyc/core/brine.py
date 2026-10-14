@@ -69,40 +69,54 @@ def register(coll, key):
         return func
     return deco
 
+class _BrineStream(object):
+    def __init__(self, stream, convert_str):
+        self._stream = stream
+        self.convert_str = convert_str
+
+    def append(self, value):
+        self._stream.append(value)
+
+    def read(self, count=-1):
+        return self._stream.read(count)
+
+    def raw(self):
+        return _BrineStream(self._stream, False)
+
 #===============================================================================
 # dumping
 #===============================================================================
 @register(_dump_registry, type(None))
-def _dump_none(obj, stream, convert_str=False):
+def _dump_none(obj, stream):
     stream.append(TAG_NONE)
 
 @register(_dump_registry, type(NotImplemented))
-def _dump_notimplemeted(obj, stream, convert_str=False):
+def _dump_notimplemeted(obj, stream):
     stream.append(TAG_NOT_IMPLEMENTED)
 
 @register(_dump_registry, type(Ellipsis))
-def _dump_ellipsis(obj, stream, convert_str=False):
+def _dump_ellipsis(obj, stream):
     stream.append(TAG_ELLIPSIS)
 
 @register(_dump_registry, bool)
-def _dump_bool(obj, stream, convert_str=False):
+def _dump_bool(obj, stream):
     if obj:
         stream.append(TAG_TRUE)
     else:
         stream.append(TAG_FALSE)
 
 @register(_dump_registry, slice)
-def _dump_slice(obj, stream, convert_str=False):
+def _dump_slice(obj, stream):
     stream.append(TAG_SLICE)
-    _dump((obj.start, obj.stop, obj.step), stream, convert_str)
+    _dump((obj.start, obj.stop, obj.step), stream)
 
 @register(_dump_registry, frozenset)
-def _dump_frozenset(obj, stream, convert_str=False):
+def _dump_frozenset(obj, stream):
     stream.append(TAG_FSET)
-    _dump(tuple(obj), stream, convert_str)
+    _dump(tuple(obj), stream)
 
 @register(_dump_registry, int)
-def _dump_int(obj, stream, convert_str=False):
+def _dump_int(obj, stream):
     if obj in IMM_INTS:
         stream.append(IMM_INTS[obj])
     else:
@@ -114,16 +128,16 @@ def _dump_int(obj, stream, convert_str=False):
             stream.append(TAG_INT_L4 + I4.pack(l) + obj)
 
 @register(_dump_registry, float)
-def _dump_float(obj, stream, convert_str=False):
+def _dump_float(obj, stream):
     stream.append(TAG_FLOAT + F8.pack(obj))
 
 @register(_dump_registry, complex)
-def _dump_complex(obj, stream, convert_str=False):
+def _dump_complex(obj, stream):
     stream.append(TAG_COMPLEX + C16.pack(obj.real, obj.imag))
 
 if is_py3k:
     @register(_dump_registry, bytes)
-    def _dump_bytes(obj, stream, convert_str=False):
+    def _dump_bytes(obj, stream):
         l = len(obj)
         if l == 0:
             stream.append(TAG_EMPTY_STR)
@@ -141,13 +155,13 @@ if is_py3k:
             stream.append(TAG_STR_L4 + I4.pack(l) + obj)
 
     @register(_dump_registry, str)
-    def _dump_str(obj, stream, convert_str=False):
-        if not convert_str:
+    def _dump_str(obj, stream):
+        if not stream.convert_str:
             stream.append(TAG_UNICODE)
         _dump_bytes(obj.encode("utf8"), stream)
 else:
     @register(_dump_registry, str)
-    def _dump_str(obj, stream, convert_str=False):
+    def _dump_str(obj, stream):
         l = len(obj)
         if l == 0:
             stream.append(TAG_EMPTY_STR)
@@ -165,18 +179,18 @@ else:
             stream.append(TAG_STR_L4 + I4.pack(l) + obj)
 
     @register(_dump_registry, str)
-    def _dump_unicode(obj, stream, convert_str=False):
+    def _dump_unicode(obj, stream):
         stream.append(TAG_UNICODE)
-        _dump_str(obj.encode("utf8"), stream, convert_str)
+        _dump_str(obj.encode("utf8"), stream)
 
     @register(_dump_registry, int)
-    def _dump_long(obj, stream, convert_str=False):
+    def _dump_long(obj, stream):
         stream.append(TAG_LONG)
-        _dump_int(obj, stream, convert_str)
+        _dump_int(obj, stream)
 
 
 @register(_dump_registry, tuple)
-def _dump_tuple(obj, stream, convert_str=False):
+def _dump_tuple(obj, stream):
     l = len(obj)
     if l == 0:
         stream.append(TAG_EMPTY_TUPLE)
@@ -193,164 +207,164 @@ def _dump_tuple(obj, stream, convert_str=False):
     else:
         stream.append(TAG_TUP_L4 + I4.pack(l))
     for item in obj:
-        _dump(item, stream, convert_str)
+        _dump(item, stream)
 
-def _undumpable(obj, stream, convert_str=False):
+def _undumpable(obj, stream):
     raise TypeError("cannot dump %r" % (obj,))
 
-def _dump(obj, stream, convert_str=False):
-    _dump_registry.get(type(obj), _undumpable)(obj, stream, convert_str)
+def _dump(obj, stream):
+    _dump_registry.get(type(obj), _undumpable)(obj, stream)
 
 #===============================================================================
 # loading
 #===============================================================================
 @register(_load_registry, TAG_NONE)
-def _load_none(stream, convert_str=False):
+def _load_none(stream):
     return None
 @register(_load_registry, TAG_NOT_IMPLEMENTED)
-def _load_nonimp(stream, convert_str=False):
+def _load_nonimp(stream):
     return NotImplemented
 @register(_load_registry, TAG_ELLIPSIS)
-def _load_elipsis(stream, convert_str=False):
+def _load_elipsis(stream):
     return Ellipsis
 @register(_load_registry, TAG_TRUE)
-def _load_true(stream, convert_str=False):
+def _load_true(stream):
     return True
 @register(_load_registry, TAG_FALSE)
-def _load_false(stream, convert_str=False):
+def _load_false(stream):
     return False
 @register(_load_registry, TAG_EMPTY_TUPLE)
-def _load_empty_tuple(stream, convert_str=False):
+def _load_empty_tuple(stream):
     return ()
 
 if is_py3k:
     @register(_load_registry, TAG_EMPTY_STR)
-    def _load_empty_str(stream, convert_str=False):
-        return "" if convert_str else BYTES_LITERAL("")
+    def _load_empty_str(stream):
+        return "" if stream.convert_str else BYTES_LITERAL("")
 else:
     @register(_load_registry, TAG_EMPTY_STR)
-    def _load_empty_str(stream, convert_str=False):
+    def _load_empty_str(stream):
         return ""
 
 if is_py3k:
     @register(_load_registry, TAG_LONG)
-    def _load_long(stream, convert_str=False):
-        obj = _load(stream, convert_str)
+    def _load_long(stream):
+        obj = _load(stream)
         return int(obj)
 else:
     @register(_load_registry, TAG_LONG)
-    def _load_long(stream, convert_str=False):
-        obj = _load(stream, convert_str)
+    def _load_long(stream):
+        obj = _load(stream)
         return int(obj)
 
 @register(_load_registry, TAG_FLOAT)
-def _load_float(stream, convert_str=False):
+def _load_float(stream):
     return F8.unpack(stream.read(8))[0]
 @register(_load_registry, TAG_COMPLEX)
-def _load_complex(stream, convert_str=False):
+def _load_complex(stream):
     real, imag = C16.unpack(stream.read(16))
     return complex(real, imag)
 
 @register(_load_registry, TAG_STR1)
-def _load_str1(stream, convert_str=False):
+def _load_str1(stream):
     value = stream.read(1)
-    if is_py3k and convert_str:
+    if is_py3k and stream.convert_str:
         return value.decode("utf8")
     else:
         return value
 @register(_load_registry, TAG_STR2)
-def _load_str2(stream, convert_str=False):
+def _load_str2(stream):
     value = stream.read(2)
-    if is_py3k and convert_str:
+    if is_py3k and stream.convert_str:
         return value.decode("utf8")
     else:
         return value
 @register(_load_registry, TAG_STR3)
-def _load_str3(stream, convert_str=False):
+def _load_str3(stream):
     value = stream.read(3)
-    if is_py3k and convert_str:
+    if is_py3k and stream.convert_str:
         return value.decode("utf8")
     else:
         return value
 @register(_load_registry, TAG_STR4)
-def _load_str4(stream, convert_str=False):
+def _load_str4(stream):
     value = stream.read(4)
-    if is_py3k and convert_str:
+    if is_py3k and stream.convert_str:
         return value.decode("utf8")
     else:
         return value
 @register(_load_registry, TAG_STR_L1)
-def _load_str_l1(stream, convert_str=False):
+def _load_str_l1(stream):
     l, = I1.unpack(stream.read(1))
     value = stream.read(l)
-    if is_py3k and convert_str:
+    if is_py3k and stream.convert_str:
         return value.decode("utf8")
     else:
         return value
 @register(_load_registry, TAG_STR_L4)
-def _load_str_l4(stream, convert_str=False):
+def _load_str_l4(stream):
     l, = I4.unpack(stream.read(4))
     value = stream.read(l)
-    if is_py3k and convert_str:
+    if is_py3k and stream.convert_str:
         return value.decode("utf8")
     else:
         return value
 
 @register(_load_registry, TAG_UNICODE)
-def _load_unicode(stream, convert_str=False):
-    obj = _load(stream, False)
+def _load_unicode(stream):
+    obj = _load(stream.raw())
     return obj.decode("utf-8")
 
 @register(_load_registry, TAG_TUP1)
-def _load_tup1(stream, convert_str=False):
-    return (_load(stream, convert_str),)
+def _load_tup1(stream):
+    return (_load(stream),)
 @register(_load_registry, TAG_TUP2)
-def _load_tup2(stream, convert_str=False):
-    return (_load(stream, convert_str), _load(stream, convert_str))
+def _load_tup2(stream):
+    return (_load(stream), _load(stream))
 @register(_load_registry, TAG_TUP3)
-def _load_tup3(stream, convert_str=False):
-    return (_load(stream, convert_str), _load(stream, convert_str), _load(stream, convert_str))
+def _load_tup3(stream):
+    return (_load(stream), _load(stream), _load(stream))
 @register(_load_registry, TAG_TUP4)
-def _load_tup4(stream, convert_str=False):
-    return (_load(stream, convert_str), _load(stream, convert_str), _load(stream, convert_str), _load(stream, convert_str))
+def _load_tup4(stream):
+    return (_load(stream), _load(stream), _load(stream), _load(stream))
 @register(_load_registry, TAG_TUP_L1)
-def _load_tup_l1(stream, convert_str=False):
+def _load_tup_l1(stream):
     l, = I1.unpack(stream.read(1))
-    return tuple(_load(stream, convert_str) for i in range(l))
+    return tuple(_load(stream) for i in range(l))
 
 if is_py3k:
     @register(_load_registry, TAG_TUP_L4)
-    def _load_tup_l4(stream, convert_str=False):
+    def _load_tup_l4(stream):
         l, = I4.unpack(stream.read(4))
-        return tuple(_load(stream, convert_str) for i in range(l))
+        return tuple(_load(stream) for i in range(l))
 else:
     @register(_load_registry, TAG_TUP_L4)
-    def _load_tup_l4(stream, convert_str=False):
+    def _load_tup_l4(stream):
         l, = I4.unpack(stream.read(4))
-        return tuple(_load(stream, convert_str) for i in range(l))
+        return tuple(_load(stream) for i in range(l))
 
 @register(_load_registry, TAG_SLICE)
-def _load_slice(stream, convert_str=False):
-    start, stop, step = _load(stream, convert_str)
+def _load_slice(stream):
+    start, stop, step = _load(stream)
     return slice(start, stop, step)
 @register(_load_registry, TAG_FSET)
-def _load_frozenset(stream, convert_str=False):
-    return frozenset(_load(stream, convert_str))
+def _load_frozenset(stream):
+    return frozenset(_load(stream))
 
 @register(_load_registry, TAG_INT_L1)
-def _load_int_l1(stream, convert_str=False):
+def _load_int_l1(stream):
     l, = I1.unpack(stream.read(1))
     return int(stream.read(l))
 @register(_load_registry, TAG_INT_L4)
-def _load_int_l4(stream, convert_str=False):
+def _load_int_l4(stream):
     l, = I4.unpack(stream.read(4))
     return int(stream.read(l))
 
-def _load(stream, convert_str=False):
+def _load(stream):
     tag = stream.read(1)
     if tag in IMM_INTS_LOADER:
         return IMM_INTS_LOADER[tag]
-    return _load_registry.get(tag)(stream, convert_str)
+    return _load_registry.get(tag)(stream)
 
 #===============================================================================
 # API
@@ -363,9 +377,9 @@ def dump(obj, convert_str=False):
     
     :returns: a byte-string representation of the object
     """
-    stream = []
-    _dump(obj, stream, convert_str=convert_str)
-    return BYTES_LITERAL("").join(stream)
+    stream = _BrineStream([], convert_str)
+    _dump(obj, stream)
+    return BYTES_LITERAL("").join(stream._stream)
 
 def load(data, convert_str=False):
     """Recreates (loads) an object from its byte-string representation
@@ -375,8 +389,8 @@ def load(data, convert_str=False):
     
     :returns: the dumped object
     """
-    stream = BytesIO(data)
-    return _load(stream, convert_str=convert_str)
+    stream = _BrineStream(BytesIO(data), convert_str)
+    return _load(stream)
 
 if is_py3k:
     simple_types = frozenset([type(None), int, bool, float, bytes, str, complex, 
