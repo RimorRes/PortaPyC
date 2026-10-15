@@ -47,7 +47,9 @@ classifiers = [
 Homepage = "https://rpyc.readthedocs.org"
 
 [project.optional-dependencies]
-test = ["pytest"]
+dev = ["pytest"]
+docs = ["sphinx", "sphinx_rtd_theme"]
+full = ["portapyc[dev, docs]"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
