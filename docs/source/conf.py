@@ -13,7 +13,7 @@ sys.path.insert(0, os.path.abspath("../.."))
 # https://www.sphinx-doc.org/en/master/usage/configuration.html#project-information
 
 project = 'PortaPyC'
-copyright = '2005-2013, Tomer Filiba, 2026, THALES LAS France'
+copyright = '2005-2013, Tomer Filiba, 2026, THALES'
 author = 'Tomer Filiba, Maxime Djomby'
 release = version_string
 

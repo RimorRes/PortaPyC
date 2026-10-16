@@ -13,7 +13,7 @@ authors = [
     {name = "Tomer Filiba", email = "tomerfiliba@gmail.com"},
 ]
 maintainers = [
-    {name = "Maxime Djomby", email = "maxime.djomby@thalesgroup.com"},
+    {name = "Maxime Djomby", email = "maxime.djomby@gmail.com"},
 ]
 requires-python = ">=3.7"
 dependencies = [
