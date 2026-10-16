@@ -1,5 +1,10 @@
 ![PortaPyC](docs/source/_static/banner.png)
 
+![PyPI Version](https://img.shields.io/pypi/v/portapyc)
+![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/rimorres/portapyc/python-package.yml)
+![Read the Docs](https://img.shields.io/readthedocs/portapyc)
+
+
 [PortaPyC](https://portapyc.readthedocs.io/en/latest/) (pronounced *port-a-pike*) 
 is a Python 3 port of [RPyC 3.3.0](https://rpyc.readthedocs.io/en/latest/) that
 preserves the RPyC wire protocol. Its primary use case is connecting matching
