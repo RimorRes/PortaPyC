@@ -44,10 +44,10 @@ classifiers = [
 ]
 
 [project.urls]
-Homepage = "https://rpyc.readthedocs.org"
+Homepage = "https://portapyc.readthedocs.io/en/latest/"
 
 [project.optional-dependencies]
-dev = ["pytest"]
+test = ["pytest"]
 docs = ["sphinx", "sphinx_rtd_theme"]
 full = ["portapyc[dev, docs]"]
 

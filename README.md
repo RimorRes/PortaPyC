@@ -1,6 +1,7 @@
 ![PortaPyC](docs/source/_static/banner.png)
 
-PortaPyC (pronounced *port-a-pike*) is a Python 3 port of RPyC 3.3.0 that
+[PortaPyC](https://portapyc.readthedocs.io/en/latest/) (pronounced *port-a-pike*) 
+is a Python 3 port of [RPyC 3.3.0](https://rpyc.readthedocs.io/en/latest/) that
 preserves the RPyC wire protocol. Its primary use case is connecting matching
 and differing Python runtimes: a Python 3 application can communicate with a
 legacy Python 2 RPyC server (and vice versa) even when that server cannot be
@@ -88,11 +89,18 @@ result = connection.root.calculate_total(10, 20)
 connection.close()
 ```
 
-See the [Sphinx documentation](docs/source/index.rst) for the connection model,
-service discovery, security options, and the public API reference. Build it
-locally with:
+## Documentation
+
+See this project's documentation on [ReadTheDocs](https://portapyc.readthedocs.io/en/latest/) 
+or read [RPyC's documentation](https://rpyc.readthedocs.io/en/latest/) for information about the connection model,
+service discovery, security options, and the public API reference. 
+
+You can also build this project's documentation locally with Sphinx. 
+After installing the documentation dependencies, 
+run the following command in the project root directory to build the HTML documentation:
 
 ```console
+pip install portapyc[docs]
 python -m sphinx -b html docs docs/_build/html
 ```
 
